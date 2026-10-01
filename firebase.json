@@ -1,0 +1,17 @@
+{
+  "apphosting": [
+    {
+      "backendId": "rexolnews",
+      "rootDir": ".",
+      "ignore": [
+        "node_modules",
+        ".git",
+        ".next",
+        ".env*",
+        "dev.db*",
+        "firebase-debug.log",
+        "firebase-debug.*.log"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,137 @@
+// RexolNews CMS schema
+// Dev default: SQLite. Swap provider to "postgresql" and set DATABASE_URL for production.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model AdminUser {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  passwordHash String
+  role      String   @default("editor") // editor | admin
+  createdAt DateTime @default(now())
+  articles  Article[]
+}
+
+model Author {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  bio         String?
+  imageUrl    String?
+  twitter     String?
+  linkedin    String?
+  website     String?
+  articles    Article[]
+  createdAt   DateTime @default(now())
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique // news | ai | tools | startups | reviews | guides | analysis | best
+  description String?
+  articles    Article[]
+}
+
+model Tag {
+  id       String    @id @default(cuid())
+  name     String
+  slug     String    @unique
+  articles Article[]
+}
+
+model Source {
+  id           String   @id @default(cuid())
+  publication  String
+  url          String
+  author       String?
+  publishedAt  DateTime?
+  claimType    String   @default("REPORTED_FACT")
+  articleId    String
+  article      Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+}
+
+model Correction {
+  id          String   @id @default(cuid())
+  articleId   String
+  article     Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  explanation String
+  correctedAt DateTime @default(now())
+}
+
+model Media {
+  id        String   @id @default(cuid())
+  url       String
+  altText   String
+  caption   String?
+  credit    String?
+  sourceUrl String?
+  createdAt DateTime @default(now())
+}
+
+model BestOfProduct {
+  id             String   @id @default(cuid())
+  articleId      String
+  article        Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  name           String
+  logoUrl        String?
+  description    String
+  officialUrl    String
+  pricing        String?
+  hasFreePlan    Boolean  @default(false)
+  keyFeatures    String   // JSON-encoded string array
+  strengths      String   // JSON-encoded string array
+  limitations    String   // JSON-encoded string array
+  bestFor        String?
+  testingNotes   String?
+  needsVerification Boolean @default(false)
+  lastVerifiedAt DateTime?
+  rank           Int      @default(0)
+}
+
+model Article {
+  id               String        @id @default(cuid())
+  slug             String        @unique
+  type             String        @default("NEWS")
+  status           String        @default("DRAFT")
+  headline         String
+  deck             String?
+  bodyMarkdown     String
+  featuredImageUrl String?
+  featuredImageAlt String?
+  categoryId       String
+  category         Category      @relation(fields: [categoryId], references: [id])
+  authorId         String
+  author           Author        @relation(fields: [authorId], references: [id])
+  tags             Tag[]
+  sources          Source[]
+  corrections      Correction[]
+  bestOfProducts   BestOfProduct[]
+  editoriallyReviewed Boolean    @default(false)
+  publishedAt      DateTime?
+  updatedAt        DateTime      @updatedAt
+  scheduledFor     DateTime?
+  createdAt        DateTime      @default(now())
+  createdById      String?
+  createdBy        AdminUser?    @relation(fields: [createdById], references: [id])
+  metaTitle        String?
+  metaDescription  String?
+  canonicalUrl     String?
+}
+
+model NewsletterSubscriber {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  consentedAt  DateTime @default(now())
+  source       String?  // where they signed up, e.g. "homepage" | "article"
+  provider     String?  // which ESP this was synced to, once configured
+  unsubscribed Boolean  @default(false)
+}
